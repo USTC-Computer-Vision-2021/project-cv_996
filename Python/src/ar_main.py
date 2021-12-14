@@ -1,5 +1,6 @@
 
 
+
 import argparse
 
 import cv2
@@ -8,26 +9,24 @@ import math
 import os
 from objloader_simple import *
 
-# method of matching- orb or sift
 pair = "orb"
 
-# reference image to be matched
-reference = 'reference/model2.png'
+reference = 'reference/model5.jpg'
 
-# the output 3D model
 model_out = 'models/fox.obj'
 
+Colordetection = True
 # Minimum number of matches that have to be found
 # to consider the recognition valid
-MIN_MATCHES = 10  
+MIN_MATCHES = 10
 
 
 def main():
     """
     This functions loads the target surface image,
     """
-    homography = None 
-    # matrix of camera parameters (made up but works quite well for me) 
+    homography = None
+    # matrix of camera parameters (made up but works quite well for me)
     camera_parameters = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]])
     # create ORB keypoint detector
     sift = cv2.xfeatures2d.SIFT_create()
@@ -47,7 +46,7 @@ def main():
         kp_model, des_model = orb.detectAndCompute(model, None)
     # Load 3D model from OBJ file
     obj = OBJ(os.path.join(dir_name, model_out), swapyz=True)
-    # init video capture from the peripheral camera
+    # init video capture
     cap = cv2.VideoCapture(2)
 
     while True:
@@ -56,8 +55,18 @@ def main():
         matches = []
         if not ret:
             print ("Unable to capture video")
-            return 
+            return
         # find and draw the keypoints of the frame
+        if Colordetection:
+            blur = cv2.GaussianBlur(frame, (7, 7), 0)
+            hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
+            # standard: (35, 43, 46) -> (77, 255, 255)
+            low_green = (35, 43, 46)
+            high_green = (90, 255, 255)
+            mask = cv2.inRange(hsv, low_green, high_green)
+            frame = cv2.add(np.zeros(np.shape(frame), dtype=np.uint8), frame, mask = mask)
+            frame = 255 - frame
+
         if pair == "sift":
             kp_frame, des_frame = sift.detectAndCompute(frame, None)
         if pair == "orb":
