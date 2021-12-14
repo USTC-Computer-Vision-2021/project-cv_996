@@ -11,7 +11,7 @@ from objloader_simple import *
 
 pair = "orb"
 
-reference = 'reference/model5.jpg'
+reference = 'reference/model2.png'
 
 model_out = 'models/fox.obj'
 
@@ -20,12 +20,16 @@ Colordetection = True
 # to consider the recognition valid
 MIN_MATCHES = 10
 
+# Max Queue Length
+Q_LEN = 10
+
 
 def main():
     """
     This functions loads the target surface image,
     """
-    homography = None
+    HomoQueue = []
+    last_homo = None
     # matrix of camera parameters (made up but works quite well for me)
     camera_parameters = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]])
     # create ORB keypoint detector
@@ -63,8 +67,8 @@ def main():
             # standard: (35, 43, 46) -> (77, 255, 255)
             low_green = (35, 43, 46)
             high_green = (90, 255, 255)
-            mask = cv2.inRange(hsv, low_green, high_green)
-            frame = cv2.add(np.zeros(np.shape(frame), dtype=np.uint8), frame, mask = mask)
+            clmask = cv2.inRange(hsv, low_green, high_green)
+            frame = cv2.add(np.zeros(np.shape(frame), dtype=np.uint8), frame, mask = clmask)
             frame = 255 - frame
 
         if pair == "sift":
@@ -80,7 +84,7 @@ def main():
 
         # compute Homography if enough matches are found
         if len(matches) > MIN_MATCHES:
-            print(len(matches))
+            #print(len(matches))
             # differenciate between source points and destination points
             src_pts = np.float32([kp_model[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
             dst_pts = np.float32([kp_frame[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
@@ -95,8 +99,17 @@ def main():
                 # connect them with lines  
                 frame = cv2.polylines(frame, [np.int32(dst)], True, 255, 3, cv2.LINE_AA)  
             # if a valid homography matrix was found render cube on model plane
+
             if homography is not None:
                 try:
+                    if len(HomoQueue) == Q_LEN:
+                        HomoQueue.pop(0)
+                    HomoQueue.append(homography)
+
+                    for hm in HomoQueue[0: -1]:
+                        homography = homography + hm
+                    homography = homography / Q_LEN
+
                     # obtain 3D projection matrix from homography matrix and camera parameters
                     projection = projection_matrix(camera_parameters, homography)  
                     # project cube or model
@@ -104,8 +117,12 @@ def main():
                     #frame = render(frame, model, projection)
 
                     print(homography)
+
+
+
                 except:
                     pass
+
             # draw first 10 matches.
             if args.matches:
                 frame = cv2.drawMatches(model, kp_model, frame, kp_frame, matches[:10], 0, flags=2)
@@ -115,7 +132,7 @@ def main():
                 break
 
         else:
-            print ("Not enough matches found - %d/%d" % (len(matches), MIN_MATCHES))
+            print ("Insufficient matches - %d/%d" % (len(matches), MIN_MATCHES))
 
     cap.release()
     cv2.destroyAllWindows()
@@ -184,15 +201,13 @@ def hex_to_rgb(hex_color):
 
 
 # Command line argument parsing
-# NOT ALL OF THEM ARE SUPPORTED YET
+
 parser = argparse.ArgumentParser(description='Augmented reality application')
 
 parser.add_argument('-r','--rectangle', help = 'draw rectangle delimiting target surface on frame', action = 'store_true')
 parser.add_argument('-mk','--model_keypoints', help = 'draw model keypoints', action = 'store_true')
 parser.add_argument('-fk','--frame_keypoints', help = 'draw frame keypoints', action = 'store_true')
 parser.add_argument('-ma','--matches', help = 'draw matches between keypoints', action = 'store_true')
-# TODO jgallostraa -> add support for model specification
-#parser.add_argument('-mo','--model', help = 'Specify model to be projected', action = 'store_true')
 
 args = parser.parse_args()
 
