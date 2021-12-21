@@ -53,7 +53,7 @@ def main():
     # Load 3D model from OBJ file
     obj = OBJ(os.path.join(dir_name, model_out), swapyz=True)
     # init video capture
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     while True:
         # read the current frame
