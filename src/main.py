@@ -1,4 +1,4 @@
-import argparse
+import configparser
 
 import dearpygui.dearpygui as dpg
 import cv2
@@ -7,32 +7,41 @@ import math
 import os
 from objloader_simple import *
 
-pair = "orb"
-reference = 'reference/model2.png'
-model_path = 'models/'
-model_name = 'cow.obj'
+# ------------------ Config ------------------
+
+config = configparser.ConfigParser()
+config.read('./src/config.conf')
+
+pair = config.get('Default', 'pair')
+reference_path = config.get('path', 'reference_path')
+reference_name = config.get('Default', 'reference_name')
+reference = reference_path + reference_name
+model_path = config.get('path', 'model_path')
+model_name = config.get('Default', 'model_name')
 input_model_name = model_name
 
-Draw_rectangle = False
-Colordetection = False
+Draw_rectangle = config.getboolean('Default', 'draw_rectangle')
+Colordetection = config.getboolean('Default', 'colordetection')
 # Minimum number of matches that have to be found
 # to consider the recognition valid
-MIN_MATCHES = 10
-Draw_Matches = 10
+MIN_MATCHES = config.getint('Default', 'min_matches')
+Draw_Matches = config.getint('Default', 'draw_matches')
 
 # Max Queue Length
-Q_LEN = 10
+Q_LEN = config.getint('Default', 'q_len')
 
-frame_size_width = 400
-frame_size_height = 400
-frame_matches_size_width = 400
-frame_matches_size_height = 256
+frame_size_width = config.getint('window', 'frame_size_width')
+frame_size_height = config.getint('window', 'frame_size_height')
+frame_matches_size_width = config.getint('window', 'frame_matches_size_width')
+frame_matches_size_height = config.getint('window', 'frame_matches_size_height')
 window_width = frame_size_width + frame_matches_size_width + 45 + 600
 window_height = frame_matches_size_height + 512
 
 dpg.create_context()
 dpg.create_viewport(title='Augmented reality application', width=window_width, height=window_height)
 dpg.setup_dearpygui()
+
+# ------------------ uitls ------------------
 
 def render(img, obj, projection, model, color=False):
     """
@@ -95,7 +104,6 @@ def hex_to_rgb(hex_color):
     h_len = len(hex_color)
     return tuple(int(hex_color[i:i + h_len // 3], 16) for i in range(0, h_len, h_len // 3))
 
-
 def processing_frame_data(frame):
     data = np.flip(frame, 2)
     data = data.ravel()
@@ -103,7 +111,7 @@ def processing_frame_data(frame):
 
     return(np.true_divide(data, 255.0))
 
-# GUI Callback
+# ------------------ GUI Callback ------------------
 
 def if_draw_rec(sender, data):
     global Draw_rectangle
@@ -125,7 +133,7 @@ def read_model(sender, data):
     else:
         print("no such file")
 
-# main
+# ------------------ Main ------------------
 
 if __name__ == '__main__':
 
@@ -196,6 +204,7 @@ if __name__ == '__main__':
         model_out = model_path + model_name
         obj = OBJ(os.path.join(dir_name, model_out), swapyz=True)
 
+        # Normalization
         v = np.array(obj.vertices)
         N = v.size
         center = v.mean(0)
@@ -285,6 +294,5 @@ if __name__ == '__main__':
 
 
     cap.release()
-#    cv2.destroyAllWindows()
     dpg.destroy_context()
 

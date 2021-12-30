@@ -1,3 +1,5 @@
+# This is a simple obj_loader class, only for triangle meshes
+
 class OBJ:
     def __init__(self, filename, swapyz=False):
         """Loads a Wavefront OBJ file. """
