@@ -16,6 +16,7 @@ reference = 'reference/model2.png'
 model_out = 'models/fox.obj'
 
 Colordetection = False
+bsmooth = True
 # Minimum number of matches that have to be found
 # to consider the recognition valid
 MIN_MATCHES = 10
@@ -24,13 +25,14 @@ MIN_MATCHES = 10
 Q_LEN = 10
 
 
+
 def main():
     """
     This functions loads the target surface image,
     """
     HomoQueue = []
     last_homo = None
-    # matrix of camera parameters (made up but works quite well for me)
+    # matrix of camera parameters
     camera_parameters = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]])
     # create ORB keypoint detector
     sift = cv2.xfeatures2d.SIFT_create()
@@ -56,6 +58,7 @@ def main():
     while True:
         # read the current frame
         ret, frame = cap.read()
+        framecopy = frame
         matches = []
         if not ret:
             print ("Unable to capture video")
@@ -70,20 +73,19 @@ def main():
             clmask = cv2.inRange(hsv, low_green, high_green)
             frame = cv2.add(np.zeros(np.shape(frame), dtype=np.uint8), frame, mask = clmask)
             frame = 255 - frame
+            masked = frame
 
         if pair == "sift":
             kp_frame, des_frame = sift.detectAndCompute(frame, None)
         if pair == "orb":
             kp_frame, des_frame = orb.detectAndCompute(frame, None)    
         # match frame descriptors with model descriptors
-        
-        if kp_frame:
-
+        if not (kp_frame == []):
             matches = bf.match(des_model, des_frame)
             # sort them in the order of their distance
             # the lower the distance, the better the match
             matches = sorted(matches, key=lambda x: x.distance)
-        
+
         # compute Homography if enough matches are found
         if len(matches) > MIN_MATCHES:
             #print(len(matches))
@@ -104,13 +106,15 @@ def main():
 
             if homography is not None:
                 try:
-                    if len(HomoQueue) == Q_LEN:
-                        HomoQueue.pop(0)
-                    HomoQueue.append(homography)
+                    if bsmooth == True:
+                        if len(HomoQueue) == Q_LEN:
+                            HomoQueue.pop(0)
+                        HomoQueue.append(homography)
 
-                    for hm in HomoQueue[0: -1]:
-                        homography = homography + hm
-                    homography = homography / Q_LEN
+                        for hm in HomoQueue[0: -1]:
+                            homography = homography + hm
+                        homography = homography / Q_LEN
+
 
                     # obtain 3D projection matrix from homography matrix and camera parameters
                     projection = projection_matrix(camera_parameters, homography)  
@@ -130,6 +134,8 @@ def main():
                 frame = cv2.drawMatches(model, kp_model, frame, kp_frame, matches[:10], 0, flags=2)
             # show result
             cv2.imshow('frame', frame)
+            #cv2.imshow('masked', masked)
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
