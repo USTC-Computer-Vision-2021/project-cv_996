@@ -216,7 +216,11 @@ activate cv_ar
 pip install -r requirement.txt
 ```
 
+运行时输入:
 
+```
+python ./src/main.py
+```
 
-
+需保证设备有一个摄像头，并在程序中cv2.VideoCapture(\*)的*处输入设备的序号。
 
