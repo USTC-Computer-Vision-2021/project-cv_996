@@ -156,7 +156,7 @@ def render(img, obj, projection, model, color=False):
 
 ## 图形界面
 
-在后续中，为了方面交互以及使用，我们选择了DearPyGui库（https://github.com/hoffstadt/DearPyGui）构建项目的GUI，效果如下：
+在后续中，为了方面交互以及使用，我们选择了DearPyGui库（https://github.com/hoffstadt/DearPyGui）  构建项目的GUI，效果如下：
 
 ![](/media/6.jpg)
 
@@ -224,3 +224,4 @@ python ./src/main.py
 
 需保证设备有一个摄像头，并在程序中cv2.VideoCapture(\*)的*处输入设备的序号。
 
+由于opencv版本较高，这里无法使用sift特征提取器，故在程序中注释，若想使用，需下载低版本的opencv。
