@@ -8,13 +8,13 @@
 
 本实验报告分为两个部分，在第一部分中我们在Python-OpenCV平台实践了基于SIFT和orb算法进行特征匹配的增强现实算法。在第二部分中，我们总结了现有方案的部分缺点并提出了针对角点失配、模型抖动问题的解决方案。
 
-### 一、增强现实
+## 增强现实
 
-##### 1.原理概述
+#### 1.原理概述
 
 增强现实是将物体和相应信息放置在图像数据上的一系列操作的总称。简单的增强现实任务的目标可以概括为将一幅图像中标记物上的点映射到另一位置视角的图像的对应点上，解算出映射关系，再使用该解算出的映射矩阵将已有模型投影到原始图像中。
 
-##### 2.算法流程
+#### 2.算法流程
 
 1.首先提取标记图像`model`和目标图像`frame`的SIFT或orb特征，再通过CV内置的匹配算法估计其单应性矩阵`homography`。
 
@@ -93,15 +93,15 @@ def render(img, obj, projection, model, color=False):
 
 报告中展示的仅为最基本的算法框架，细节均在`/Python/src`中注释体现。
 
-##### 3.实验结果
+#### 3.实验结果
 
 该方案下运行的实时AR实验结果在`/media/1.mp4`中展示。
 
-### 二、优化方案
+## 优化方案
 
 在`/media/1.mp4`中，我们可以总结出两个较为明显的问题：一是相机在特定角度会间歇性地解算出错误的投射矩阵使得模型脱离标记，而是模型就算能保持在标记上方，也会以一个非常高的频率抖动。
 
-##### 1.角点失配
+#### 1.角点失配
 
 通过查看前十大匹配点我们发现，由于orb角点检测仅针对灰度图像，在一些特定的角度算法会错误地将一些环境中的“角”判断成目标。如下图所示：
 
@@ -131,7 +131,7 @@ def render(img, obj, projection, model, color=False):
 
 图2：颜色阈值方法有效滤除了环境中的噪声干扰
 
-##### 2.模型抖动
+#### 2.模型抖动
 
 模型的抖动一般是由于摄像头采样率低和标记图像内有角点错配造成的，从图1中可以看出orb算法有时难以分辨箭头的左肩和右肩，因此模型虽然能吸附在标记上，但会出现左右、前后高频率摆动的情况。
 
@@ -139,12 +139,73 @@ def render(img, obj, projection, model, color=False):
 
 实验结果如视频`\media\3.mp4`所示。
 
-### 三、实验总结
+## 图形界面
+
+//todo
+
+## 实验总结
 
 在本实验中，我们基于Python-OpenCV平台，采用SIFT和orb方法实现了标记图像到摄像机视角的转换，并套用[1]的方法将三维模型映射到摄像机图像上，实现了动态AR算法。此后针对环境干扰和模型高频抖动问题，我们采用颜色阈值方法和均值滤波有效解决了问题，但仍有存在颜色阈值方法对较为复杂的标记图像不适用，均值滤波对标记物的高频运动灵敏度差等问题。
 
-### 四、参考文献
+## 参考文献
 
 [1]https://blog.csdn.net/weixin_41655918/article/details/89038462
 
 [2]https://blog.csdn.net/limmmy/article/details/88973467
+
+## 工程结构
+
+```
+│  README.md
+│
+├─.github
+│      .keep
+│
+├─media
+│      1.mp4
+│      2.mp4
+│      3.mp4
+│      4.jpg
+│      5.jpg
+│
+└─Python
+    └─src
+        │  ar_main.py
+        │  objloader_simple.py
+        │  objloader_simple.pyc
+        │
+        ├─.idea
+        │  │  .gitignore
+        │  │  misc.xml
+        │  │  modules.xml
+        │  │  src.iml
+        │  │  vcs.xml
+        │  │  workspace.xml
+        │  │
+        │  └─inspectionProfiles
+        │          profiles_settings.xml
+        │
+        ├─models
+        │      cow.obj
+        │      ducky.obj
+        │      fox.obj
+        │      pirate-ship-fat.obj
+        │      rat.obj
+        │      wolf.obj
+        │
+        ├─reference
+        │      model.jpg
+        │      model2.png
+        │      model3.png
+        │      model4.png
+        │      model5.jpg
+        │
+        └─__pycache__
+                objloader_simple.cpython-36.pyc
+                objloader_simple.cpython-37.pyc
+```
+
+运行环境：//todo
+
+
+
