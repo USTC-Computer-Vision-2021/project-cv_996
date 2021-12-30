@@ -156,7 +156,11 @@ def render(img, obj, projection, model, color=False):
 
 ## 图形界面
 
-//todo
+在后续中，为了方面交互以及使用，我们选择了DearPyGui库（https://github.com/hoffstadt/DearPyGui）构建项目的GUI，效果如下：
+
+![](/media/6.jpg)
+
+AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（前10个），Configs为用户交互的界面，窗口的大小在配置文件config.conf中设置（如不同设备可能需要做相应调整），其中Textures和Metrics需要手动调整大小以及位置以保证图形交互界面的美观性。
 
 ## 实验总结
 
@@ -172,6 +176,7 @@ def render(img, obj, projection, model, color=False):
 
 ```
 │  README.md
+│  requirement.txt
 │
 ├─.github
 │      .keep
@@ -183,44 +188,35 @@ def render(img, obj, projection, model, color=False):
 │      4.jpg
 │      5.jpg
 │
-└─Python
-    └─src
-        │  ar_main.py
-        │  objloader_simple.py
-        │  objloader_simple.pyc
-        │
-        ├─.idea
-        │  │  .gitignore
-        │  │  misc.xml
-        │  │  modules.xml
-        │  │  src.iml
-        │  │  vcs.xml
-        │  │  workspace.xml
-        │  │
-        │  └─inspectionProfiles
-        │          profiles_settings.xml
-        │
-        ├─models
-        │      cow.obj
-        │      ducky.obj
-        │      fox.obj
-        │      pirate-ship-fat.obj
-        │      rat.obj
-        │      wolf.obj
-        │
-        ├─reference
-        │      model.jpg
-        │      model2.png
-        │      model3.png
-        │      model4.png
-        │      model5.jpg
-        │
-        └─__pycache__
-                objloader_simple.cpython-36.pyc
-                objloader_simple.cpython-37.pyc
+└─src
+    │  config.conf
+    │  main.py
+    │  objloader_simple.py
+    │
+    ├─models
+    │      cow.obj
+    │      fox.obj
+    │      pirate-ship-fat.obj
+    │      rat.obj
+    │      wolf.obj
+    │
+    ├─reference
+    │      model.jpg
+    │      model2.png
+    │      model3.png
+    │      model4.png
+    │      model5.jpg
 ```
 
-运行环境：//todo
+运行环境配置：
+
+```
+conda create -n cv_ar python=3.7
+activate cv_ar
+pip install -r requirement.txt
+```
+
+
 
 
 
