@@ -6,9 +6,7 @@
 
 增强现实是将三维物体和相应信息映射在二维图像数据上的一系列操作的总称。通过从二维图像中获得三维信息、将三维模型映射到二维图像这两个基本操作，可以实现虚拟模型与现实照片的融合。
 
-
-
-本实验报告分为两个部分，在第一部分中我们在Python-OpenCV平台实践了基于SIFT和orb算法进行特征匹配的增强现实算法。在第二部分中，我们总结了现有方案的部分缺点并提出了针对角点失配、模型抖动问题的解决方案。
+本实验报告分为三个部分：在第一部分中我们在Python-OpenCV平台实践了以SIFT和orb特征匹配算法为基础的实时增强现实软件。在第二部分中，我们总结了现有方案的部分缺点并提出了针对角点失配、模型抖动问题的解决方案。在最后一部分中我们为项目编写了图形界面方便调试和使用。
 
 ------
 
@@ -23,7 +21,7 @@
 
 #### 1.原理概述
 
-增强现实是将物体和相应信息放置在图像数据上的一系列操作的总称。简单的增强现实任务的目标可以概括为将一幅图像中标记物上的点映射到另一位置视角的图像的对应点上，解算出映射关系，再使用该解算出的映射矩阵将已有模型投影到原始图像中。
+简单的增强现实任务的目标可以概括为将一幅图像中标记物上的点映射到另一位置视角的图像的对应点上，解算出映射关系，再使用该解算出的映射矩阵将已有模型投影到原始图像中。
 
 #### 2.算法流程
 
@@ -34,11 +32,6 @@ if pair == "sift":
     kp_model, des_model = sift.detectAndCompute(model, None)
 if pair == "orb":
     kp_model, des_model = orb.detectAndCompute(model, None)
-...
-if pair == "sift":
-    kp_frame, des_frame = sift.detectAndCompute(frame, None)
-if pair == "orb":
-    kp_frame, des_frame = orb.detectAndCompute(frame, None)
 ...
 if not (kp_frame == []):
     matches = bf.match(des_model, des_frame)
@@ -106,7 +99,7 @@ def render(img, obj, projection, model, color=False):
     return img
 ```
 
-报告中展示的仅为最基本的算法框架，细节均在`/Python/src`中注释体现。
+报告中展示的仅为最基本的算法框架，细节均在`/src/main.py`中注释体现。
 
 #### 3.实验结果
 
@@ -114,7 +107,7 @@ def render(img, obj, projection, model, color=False):
 
 ## 优化方案
 
-从`/media/1.mp4`中，我们可以总结出两个较为明显的问题：一是相机在特定角度会间歇性地解算出错误的投射矩阵使得模型脱离标记，而是模型就算能保持在标记上方，也会以一个非常高的频率抖动。
+从`/media/1.mp4`中，我们可以总结出两个较为明显的问题：一是相机在特定角度会间歇性地解算出错误的投射矩阵使得模型脱离标记，二是模型就算能保持在标记上方，也会以一个非常高的频率抖动。
 
 #### 1.角点失配
 
@@ -122,7 +115,8 @@ def render(img, obj, projection, model, color=False):
 
 ![](/media/4.jpg)
 
-图1：一个角点失配的实例
+> 图1：一个角点失配的实例
+>
 
 为了解决该问题，我们采取了一种简单的方案：通过设定颜色阈值，排除环境因素的影响。（该方案仅仅适用于标记图像颜色比较单一且与一般环境有较大差距的情况，如蓝色和绿色）。
 
@@ -132,7 +126,6 @@ def render(img, obj, projection, model, color=False):
  if Colordetection:
     blur = cv2.GaussianBlur(frame, (7, 7), 0)
     hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
-    # standard: (35, 43, 46) -> (77, 255, 255)
     low_green = (35, 43, 46)
     high_green = (90, 255, 255)
     clmask = cv2.inRange(hsv, low_green, high_green)
@@ -144,11 +137,12 @@ def render(img, obj, projection, model, color=False):
 
 ![](/media/5.jpg)
 
-图2：颜色阈值方法有效滤除了环境中的噪声干扰
+> 图2：颜色阈值方法有效滤除了环境中的噪声干扰
+>
 
 #### 2.模型抖动
 
-模型的抖动一般是由于摄像头采样率低和标记图像内有角点错配造成的，从图1中可以看出orb算法有时难以分辨箭头的左肩和右肩，因此模型虽然能吸附在标记上，但会出现左右、前后高频率摆动的情况。
+模型的抖动一般是由于摄像头采样率低和标记图像内有角点错配造成的，从图1中可以看出orb算法有时难以分辨箭头的“左肩”和“右肩”，因此模型虽然能吸附在标记上，但会出现左右、前后高频率摆动的情况。
 
 为此，我们采用均值平滑方法来降低高频抖动。通过设置一个长度为10的队列窗口，将按时间序列输入的单应性矩阵与前9个取平均值后作为新的单应性矩阵。该方法可以有效缓解高频振动的问题，但对于快速运动的标记灵敏度会降低，出现延迟现象。
 
@@ -156,17 +150,21 @@ def render(img, obj, projection, model, color=False):
 
 ## 图形界面
 
-在后续中，为了方面交互以及使用，我们选择了DearPyGui库（https://github.com/hoffstadt/DearPyGui）  构建项目的GUI，效果如下：
+在后续中，为了方面交互以及使用，我们选择了`DearPyGui`库[3]（https://github.com/hoffstadt/DearPyGui）  构建项目的GUI，效果如下：
 
 ![](/media/6.jpg)
 
-AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（前10个），Configs为用户交互的界面，窗口的大小在配置文件config.conf中设置（如不同设备可能需要做相应调整），其中Textures和Metrics需要手动调整大小以及位置以保证图形交互界面的美观性。
+> 图3：GUI界面
 
-最终成果可查看final.mp4。
+GUI界面共有5个窗口，其中`AR`(左上)为结果展示界面，`Show Matches`(中上)展示模版与实时图像的匹配点之间对应关系(前10个特征点)，`Configs`(中下)为用户交互的界面，`Textures`(左下)和`Metrics`(右)用于监视图形窗口工作状态。
+
+为了方便编辑窗口大小、模型配置等参数，我们将其封装到了配置文件`config.conf`中，方便有不同设备和需求的用户做出相应调整，其中`Textures`和`Metrics`需要手动调整大小以及位置以保证图形交互界面的美观性。
+
+在图形界面上运行的项目展示如视频`\media\final.mp4`所示。
 
 ## 实验总结
 
-在本实验中，我们基于Python-OpenCV平台，采用SIFT和orb方法实现了标记图像到摄像机视角的转换，并套用[1]的方法将三维模型映射到摄像机图像上，实现了动态AR算法。此后针对环境干扰和模型高频抖动问题，我们采用颜色阈值方法和均值滤波有效解决了问题，但仍有存在颜色阈值方法对较为复杂的标记图像不适用，均值滤波对标记物的高频运动灵敏度差等问题。
+在本实验中，我们基于Python-OpenCV平台，采用SIFT和orb方法实现了标记图像到摄像机视角的转换，并套用[1]的方法将三维模型映射到摄像机图像上，实现了动态AR算法。此后针对环境干扰和模型高频抖动问题，我们采用颜色阈值方法和均值滤波有效解决了问题，但仍有存在颜色阈值方法对较为复杂的标记图像不适用，均值滤波对标记物的高频运动灵敏度差等问题。此后，我们实践了图形界面的编写和配置文件的封装，增加了项目的可视化程度，提高了程序的设备迁移能力。
 
 ## 参考文献
 
@@ -174,7 +172,11 @@ AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（
 
 [2]https://blog.csdn.net/limmmy/article/details/88973467
 
-## 工程结构
+[3]https://github.com/hoffstadt/DearPyGui
+
+## 环境配置
+
+#### 工程结构
 
 ```
 │  README.md
@@ -212,7 +214,17 @@ AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（
     │      model5.jpg
 ```
 
-运行环境配置：
+#### 硬件配置
+
+1.PC机
+
+2.可以被OpenCV识别的摄像头。（可能需要修改cv2.VideoCapture(%d)的%d来匹配输入设备序号）本实验采用USB免驱720P工业摄像头。
+
+<img src="/media/7.jpg" style="zoom: 25%;" />
+
+> 图4：本实验采用的摄像头外设
+
+#### 运行环境配置
 
 ```
 conda create -n cv_ar python=3.7
@@ -226,6 +238,5 @@ pip install -r requirement.txt
 python ./src/main.py
 ```
 
-需保证设备有一个摄像头，并在程序中cv2.VideoCapture(\*)的*处输入设备的序号。
+由于OpenCV版本较高，这里无法使用sift特征提取器，故在程序中注释，若想使用，需下载低版本的OpenCV。
 
-由于opencv版本较高，这里无法使用sift特征提取器，故在程序中注释，若想使用，需下载低版本的opencv。
