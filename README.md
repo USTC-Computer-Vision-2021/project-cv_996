@@ -162,6 +162,8 @@ def render(img, obj, projection, model, color=False):
 
 AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（前10个），Configs为用户交互的界面，窗口的大小在配置文件config.conf中设置（如不同设备可能需要做相应调整），其中Textures和Metrics需要手动调整大小以及位置以保证图形交互界面的美观性。
 
+最终成果可查看final.mp4。
+
 ## 实验总结
 
 在本实验中，我们基于Python-OpenCV平台，采用SIFT和orb方法实现了标记图像到摄像机视角的转换，并套用[1]的方法将三维模型映射到摄像机图像上，实现了动态AR算法。此后针对环境干扰和模型高频抖动问题，我们采用颜色阈值方法和均值滤波有效解决了问题，但仍有存在颜色阈值方法对较为复杂的标记图像不适用，均值滤波对标记物的高频运动灵敏度差等问题。
@@ -187,6 +189,8 @@ AR为结果展示界面，Show Matches为展示的匹配点之间对应关系（
 │      3.mp4
 │      4.jpg
 │      5.jpg
+│      6.jpg
+│      final.mp4
 │
 └─src
     │  config.conf
