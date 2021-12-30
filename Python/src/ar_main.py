@@ -15,7 +15,7 @@ reference = 'reference/model2.png'
 
 model_out = 'models/fox.obj'
 
-Colordetection = True
+Colordetection = False
 # Minimum number of matches that have to be found
 # to consider the recognition valid
 MIN_MATCHES = 10
@@ -51,7 +51,7 @@ def main():
     # Load 3D model from OBJ file
     obj = OBJ(os.path.join(dir_name, model_out), swapyz=True)
     # init video capture
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(1)
 
     while True:
         # read the current frame
@@ -76,12 +76,14 @@ def main():
         if pair == "orb":
             kp_frame, des_frame = orb.detectAndCompute(frame, None)    
         # match frame descriptors with model descriptors
-        if not (kp_frame == []):
+        
+        if kp_frame:
+
             matches = bf.match(des_model, des_frame)
             # sort them in the order of their distance
             # the lower the distance, the better the match
             matches = sorted(matches, key=lambda x: x.distance)
-
+        
         # compute Homography if enough matches are found
         if len(matches) > MIN_MATCHES:
             #print(len(matches))
